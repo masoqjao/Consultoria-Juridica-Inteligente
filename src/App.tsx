@@ -6,13 +6,13 @@ import {
   Settings as SettingsIcon, 
   LogOut, 
   Bell, 
-  User, 
-  ChevronRight, 
   Menu, 
   X, 
   Scale, 
   ShieldAlert,
-  Home
+  Home,
+  Sparkles,
+  ChevronRight
 } from 'lucide-react';
 
 import { ChatMessage, LegalCase, Consultation, Settings } from './types';
@@ -78,9 +78,19 @@ const DEFAULT_COON_SOCIATION: Consultation[] = [
   }
 ];
 
+// Navigation items definition
+const NAV_ITEMS = [
+  { id: 'dashboard',     label: 'Painel',        Icon: MessageSquare },
+  { id: 'processes',     label: 'Processos',      Icon: Gavel         },
+  { id: 'consultations', label: 'Consultas',      Icon: Calendar      },
+  { id: 'settings',      label: 'Configurações',  Icon: SettingsIcon  },
+] as const;
+
+type TabId = typeof NAV_ITEMS[number]['id'];
+
 function MainAppContent() {
   const { user, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'processes' | 'consultations' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -105,7 +115,7 @@ function MainAppContent() {
     return saved ? JSON.parse(saved) : DEFAULT_COON_SOCIATION;
   });
 
-  // Sync to localStorage on every state delta change if autoAnalysis/persist is true
+  // Sync to localStorage on every state delta change
   useEffect(() => {
     if (settings.autoAnalysis) {
       localStorage.setItem('law_app_settings', JSON.stringify(settings));
@@ -130,21 +140,33 @@ function MainAppContent() {
     }
   }, [consultations, settings]);
 
-  const handleLogout = () => {
-    setShowLogoutModal(true);
-  };
+  const handleLogout = () => setShowLogoutModal(true);
 
   const confirmLogout = async () => {
     await signOut();
     setShowLogoutModal(false);
   };
 
+  // ─── Loading Screen ────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-wider font-mono">Verificando sessão...</p>
+      <div className="min-h-screen bg-[#070c18] flex flex-col justify-center items-center p-4 font-sans">
+        <div className="text-center space-y-6">
+          {/* Animated logo */}
+          <div className="relative mx-auto w-16 h-16">
+            <div className="absolute inset-0 rounded-2xl bg-emerald-500/20 animate-ping" />
+            <div className="relative w-16 h-16 bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center">
+              <Scale className="w-7 h-7 text-emerald-400" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-1.5">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full dot-1" />
+              <span className="w-2 h-2 bg-emerald-500 rounded-full dot-2" />
+              <span className="w-2 h-2 bg-emerald-500 rounded-full dot-3" />
+            </div>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest font-mono">Verificando sessão...</p>
+          </div>
         </div>
       </div>
     );
@@ -155,227 +177,219 @@ function MainAppContent() {
   }
 
   const userInitials = user.email ? user.email.substring(0, 2).toUpperCase() : 'JD';
+  const specLabel = settings.lawyerSpec === 'geral' ? 'Consultor Premium' : settings.lawyerSpec;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col selection:bg-emerald-250 selection:text-emerald-900">
-      
-      {/* Dynamic TopAppBar Header (Responsive) */}
-      <header className="fixed top-0 w-full z-40 bg-white border-b border-slate-200/80 h-16 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex justify-between items-center">
-          
+    <div className="min-h-screen bg-[#070c18] font-sans text-slate-100 flex flex-col selection:bg-emerald-500/20 selection:text-emerald-300">
+
+      {/* ═══ TOP HEADER ══════════════════════════════════════════════ */}
+      <header className="fixed top-0 w-full z-40 bg-[#0a1020]/80 backdrop-blur-xl border-b border-white/[0.06] h-16">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-full flex justify-between items-center">
+
+          {/* Left: Logo + Mobile menu toggle */}
           <div className="flex items-center gap-3">
-            {/* Mobile menu trigger button */}
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 -ml-2 text-slate-500 hover:text-slate-850 hover:bg-slate-100 rounded-lg md:hidden transition-colors"
+              className="p-2 -ml-1 text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-lg md:hidden transition-all"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-emerald-600 text-white rounded-lg hidden sm:flex items-center justify-center">
-                <Scale className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="relative hidden sm:block">
+                <div className="absolute inset-0 rounded-xl bg-emerald-500/30 blur-md" />
+                <div className="relative p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 rounded-xl">
+                  <Scale className="w-4.5 h-4.5 text-emerald-400" />
+                </div>
               </div>
-              <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                Consultoria Jurídica Inteligente
-              </h1>
+              <div>
+                <h1 className="text-sm sm:text-base font-bold text-white tracking-tight leading-none">
+                  Consultoria Jurídica
+                </h1>
+                <p className="text-[10px] text-emerald-400/70 font-mono uppercase tracking-widest leading-none mt-0.5 hidden sm:block">
+                  Inteligente · IA
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button 
-              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100/80 rounded-full transition-colors relative"
+          {/* Right: Notifications + User */}
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-full transition-all relative"
               title="Notificações"
             >
-              <Bell className="w-4.5 h-4.5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 border border-white rounded-full animate-pulse"></span>
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 border border-[#0a1020] rounded-full animate-pulse" />
             </button>
-            <div className="h-4 w-[1px] bg-slate-200"></div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-              <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 font-mono font-bold">
+
+            <div className="h-5 w-px bg-white/10 mx-1" />
+
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-300 font-mono font-bold text-xs shadow-lg shadow-emerald-500/10">
                 {userInitials}
               </div>
-              <span className="hidden md:inline select-none text-slate-650 pr-1">{user.email || ''}</span>
+              <div className="hidden md:block">
+                <p className="text-xs font-semibold text-slate-200 leading-none truncate max-w-[160px]">
+                  {user.email || ''}
+                </p>
+                <p className="text-[10px] text-emerald-400/60 font-mono uppercase tracking-wider mt-0.5">
+                  {specLabel}
+                </p>
+              </div>
             </div>
           </div>
-
         </div>
       </header>
 
       <div className="flex flex-1 pt-16">
 
-        {/* 1. SideNavBar Navigation Drawer (Desktop Only) */}
-        <nav className="h-[calc(100vh-4rem)] w-64 fixed left-0 top-16 hidden md:flex flex-col py-6 px-3 bg-white border-r border-slate-200/80 space-y-1.5 select-none shrink-0">
-          
-          {/* Active Lawyer Mini Card Profile */}
-          <div className="px-3 mb-6">
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 border border-slate-200/40">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-sm">
-                <Gavel className="w-5 h-5" />
+        {/* ═══ DESKTOP SIDEBAR ═════════════════════════════════════ */}
+        <nav className="h-[calc(100vh-4rem)] w-64 fixed left-0 top-16 hidden md:flex flex-col py-5 px-3 bg-[#0a1020]/90 backdrop-blur-xl border-r border-white/[0.05] select-none shrink-0">
+
+          {/* Lawyer profile card */}
+          <div className="px-2 mb-6">
+            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-3">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-xl bg-emerald-500/20 blur-md" />
+                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center">
+                  <Gavel className="w-4.5 h-4.5 text-emerald-400" />
+                </div>
               </div>
               <div className="overflow-hidden">
-                <p className="font-bold text-xs text-slate-900 truncate" title={settings.activeLawyerName}>
+                <p className="font-bold text-xs text-slate-100 truncate" title={settings.activeLawyerName}>
                   {settings.activeLawyerName}
                 </p>
-                <p className="text-[9px] uppercase tracking-wider text-emerald-650 font-bold font-mono">
-                  {settings.lawyerSpec === 'geral' ? 'Consultor Premium' : settings.lawyerSpec}
+                <p className="text-[9px] uppercase tracking-widest text-emerald-400/70 font-mono mt-0.5">
+                  {specLabel}
                 </p>
               </div>
             </div>
           </div>
 
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-              activeTab === 'dashboard' 
-                ? 'bg-emerald-50 text-emerald-750 font-extrabold stroke-[2.5px]' 
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-            }`}
-          >
-            <MessageSquare className="w-4.5 h-4.5 shrink-0" />
-            <span>Painel</span>
-          </button>
+          {/* Nav links */}
+          <div className="flex-1 space-y-1">
+            {NAV_ITEMS.map(({ id, label, Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`relative w-full text-left text-xs font-semibold px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
+                    isActive
+                      ? 'nav-active bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                      : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
+                  <span>{label}</span>
+                  {isActive && <ChevronRight className="w-3 h-3 ml-auto text-emerald-500/50" />}
+                </button>
+              );
+            })}
+          </div>
 
-          <button
-            onClick={() => setActiveTab('processes')}
-            className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-              activeTab === 'processes' 
-                ? 'bg-emerald-50 text-emerald-750 font-extrabold stroke-[2.5px]' 
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-            }`}
-          >
-            <Gavel className="w-4.5 h-4.5 shrink-0" />
-            <span>Processos</span>
-          </button>
+          {/* AI Status indicator */}
+          <div className="px-2 mb-4">
+            <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 flex items-center gap-2.5">
+              <div className="relative shrink-0">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest">IA Operacional</p>
+                <p className="text-[9px] text-slate-600 font-mono">Gemini 2.5 Flash</p>
+              </div>
+            </div>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('consultations')}
-            className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-              activeTab === 'consultations' 
-                ? 'bg-emerald-50 text-emerald-750 font-extrabold stroke-[2.5px]' 
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-            }`}
-          >
-            <Calendar className="w-4.5 h-4.5 shrink-0" />
-            <span>Consultas</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-              activeTab === 'settings' 
-                ? 'bg-emerald-50 text-emerald-750 font-extrabold stroke-[2.5px]' 
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-            }`}
-          >
-            <SettingsIcon className="w-4.5 h-4.5 shrink-0" />
-            <span>Configurações</span>
-          </button>
-
-          <div className="mt-auto pt-4 border-t border-slate-100">
-            <button 
+          {/* Logout */}
+          <div className="px-2 border-t border-white/[0.05] pt-3">
+            <button
               onClick={handleLogout}
-              className="w-full text-xs font-bold text-slate-550 hover:text-red-650 hover:bg-red-50/50 px-4 py-3 rounded-xl flex items-center gap-3 transition-colors shrink-0"
+              className="w-full text-xs font-semibold text-slate-600 hover:text-red-400 hover:bg-red-500/5 px-4 py-3 rounded-xl flex items-center gap-3 transition-all border border-transparent hover:border-red-500/10"
             >
-              <LogOut className="w-4.5 h-4.5 shrink-0" />
-              <span>Sair</span>
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span>Sair da Conta</span>
             </button>
           </div>
         </nav>
 
-        {/* 2. Mobile Responsive Nav Menu (Slide overlay drawer) */}
+        {/* ═══ MOBILE DRAWER ═══════════════════════════════════════ */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 md:hidden flex">
             {/* Backdrop */}
-            <div 
+            <div
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             />
-            {/* Drawer Panel */}
-            <div className="relative w-72 max-w-xs bg-white h-full shadow-2xl p-6 flex flex-col space-y-6 z-50 animate-slide-right">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold text-xs text-slate-400 uppercase tracking-widest">Opções de Menu</span>
-                <button 
+            {/* Panel */}
+            <div className="relative w-72 max-w-[80vw] bg-[#0d1424] border-r border-white/[0.06] h-full flex flex-col py-6 px-4 z-50 animate-slide-right">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg">
+                    <Scale className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-200 uppercase tracking-widest">Menu</span>
+                </div>
+                <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 px-1.5 bg-slate-100 text-slate-550 rounded-lg font-bold"
+                  className="p-1.5 bg-white/5 text-slate-400 rounded-lg hover:text-slate-200 transition-colors"
                 >
-                  Fechar
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Sidebar Active Lawyer Name box */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/50">
-                <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white shrink-0">
-                  <Gavel className="w-5 h-5" />
+              {/* Profile */}
+              <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center">
+                  <Gavel className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div className="overflow-hidden">
-                  <p className="font-bold text-xs text-slate-900 truncate">{settings.activeLawyerName}</p>
-                  <p className="text-[9px] uppercase tracking-wider text-emerald-650 font-bold">{settings.lawyerSpec === 'geral' ? 'Consultor Premium' : settings.lawyerSpec}</p>
+                  <p className="font-bold text-xs text-slate-100 truncate">{settings.activeLawyerName}</p>
+                  <p className="text-[9px] uppercase tracking-wider text-emerald-400/60 font-mono">{specLabel}</p>
                 </div>
               </div>
 
-              <div className="flex-grow flex flex-col gap-2">
-                <button
-                  onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
-                  className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-                    activeTab === 'dashboard' ? 'bg-emerald-50 text-emerald-750 font-extrabold' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  <MessageSquare className="w-4.5 h-4.5 shrink-0" />
-                  <span>Painel</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('processes'); setMobileMenuOpen(false); }}
-                  className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-                    activeTab === 'processes' ? 'bg-emerald-50 text-emerald-750 font-extrabold' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  <Gavel className="w-4.5 h-4.5 shrink-0" />
-                  <span>Processos</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('consultations'); setMobileMenuOpen(false); }}
-                  className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-                    activeTab === 'consultations' ? 'bg-emerald-50 text-emerald-750 font-extrabold' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  <Calendar className="w-4.5 h-4.5 shrink-0" />
-                  <span>Consultas</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}
-                  className={`w-full text-xs font-bold tracking-wider px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-                    activeTab === 'settings' ? 'bg-emerald-50 text-emerald-750 font-extrabold' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  <SettingsIcon className="w-4.5 h-4.5 shrink-0" />
-                  <span>Configurações</span>
-                </button>
+              <div className="flex-1 space-y-1">
+                {NAV_ITEMS.map(({ id, label, Icon }) => {
+                  const isActive = activeTab === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => { setActiveTab(id); setMobileMenuOpen(false); }}
+                      className={`w-full text-left text-xs font-semibold px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                          : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <button 
+              <div className="pt-4 border-t border-white/[0.05]">
+                <button
                   onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  className="w-full text-xs font-bold text-slate-550 hover:text-red-750 py-3 rounded-xl flex items-center gap-3"
+                  className="w-full text-xs font-semibold text-slate-600 hover:text-red-400 px-4 py-3 rounded-xl flex items-center gap-3 transition-colors"
                 >
-                  <LogOut className="w-4.5 h-4.5 shrink-0" />
-                  <span>Sair</span>
+                  <LogOut className="w-4 h-4 shrink-0" />
+                  Sair da Conta
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* 3. Main Dynamic Content Frame (Responsive offset) */}
+        {/* ═══ MAIN CONTENT ════════════════════════════════════════ */}
         <main className="flex-grow md:pl-64 min-h-screen">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8">
-            
-            {/* Dynamic Content Switching router representation */}
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-10">
+
             {activeTab === 'dashboard' && (
-              <Dashboard 
+              <Dashboard
                 settings={settings}
                 chatHistory={chatHistory}
                 setChatHistory={setChatHistory}
@@ -383,21 +397,21 @@ function MainAppContent() {
             )}
 
             {activeTab === 'processes' && (
-              <Processes 
+              <Processes
                 cases={cases}
                 setCases={setCases}
               />
             )}
 
             {activeTab === 'consultations' && (
-              <Consultations 
+              <Consultations
                 consultations={consultations}
                 setConsultations={setConsultations}
               />
             )}
 
             {activeTab === 'settings' && (
-              <SettingsPage 
+              <SettingsPage
                 settings={settings}
                 setSettings={setSettings}
                 setChatHistory={setChatHistory}
@@ -410,81 +424,69 @@ function MainAppContent() {
         </main>
       </div>
 
-      {/* 4. Bottom Tab Bar Navigation (Touch and Mobile Optimized) */}
-      <nav className="fixed bottom-0 w-full z-40 md:hidden bg-white border-t border-slate-200 shadow-xl h-16 flex justify-around items-center px-2 select-none rounded-t-2xl">
-        <button 
-          onClick={() => setActiveTab('dashboard')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            activeTab === 'dashboard' ? 'text-emerald-600 font-extrabold scale-102' : 'text-slate-400'
-          }`}
-        >
-          <Home className="w-5 h-5 shrink-0" />
-          <span className="text-[9px] font-bold mt-1 uppercase tracking-wider">Início</span>
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('processes')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            activeTab === 'processes' ? 'text-emerald-600 font-extrabold scale-102' : 'text-slate-400'
-          }`}
-        >
-          <Gavel className="w-5 h-5 shrink-0" />
-          <span className="text-[9px] font-bold mt-1 uppercase tracking-wider">Processos</span>
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('consultations')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            activeTab === 'consultations' ? 'text-emerald-600 font-extrabold scale-102' : 'text-slate-400'
-          }`}
-        >
-          <Calendar className="w-5 h-5 shrink-0" />
-          <span className="text-[9px] font-bold mt-1 uppercase tracking-wider">Consultas</span>
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            activeTab === 'settings' ? 'text-emerald-600 font-extrabold scale-102' : 'text-slate-400'
-          }`}
-        >
-          <SettingsIcon className="w-5 h-5 shrink-0" />
-          <span className="text-[9px] font-bold mt-1 uppercase tracking-wider">Ajustes</span>
-        </button>
+      {/* ═══ MOBILE BOTTOM NAV ═══════════════════════════════════ */}
+      <nav className="fixed bottom-0 w-full z-40 md:hidden bg-[#0a1020]/95 backdrop-blur-xl border-t border-white/[0.06] h-[68px] flex justify-around items-center px-2 select-none">
+        {[
+          { id: 'dashboard', label: 'Início', Icon: Home },
+          { id: 'processes', label: 'Processos', Icon: Gavel },
+          { id: 'consultations', label: 'Consultas', Icon: Calendar },
+          { id: 'settings', label: 'Ajustes', Icon: SettingsIcon },
+        ].map(({ id, label, Icon }) => {
+          const isActive = activeTab === id as TabId;
+          return (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id as TabId)}
+              className={`flex flex-col items-center justify-center flex-1 py-2 gap-1 transition-all ${
+                isActive ? 'text-emerald-400' : 'text-slate-600 hover:text-slate-400'
+              }`}
+            >
+              <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-500/15' : ''}`}>
+                <Icon className="w-4.5 h-4.5" />
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? 'text-emerald-400' : ''}`}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
-      {/* 5. Sleek Confirmation Logout Modal */}
+      {/* ═══ LOGOUT MODAL ════════════════════════════════════════ */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             onClick={() => setShowLogoutModal(false)}
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
           />
-          <div className="relative bg-white rounded-2xl border border-slate-200 p-6 shadow-2xl max-w-sm w-full space-y-4 z-50 animate-fade-in/95">
-            <div className="flex gap-3 items-start">
-              <div className="p-3 bg-red-50 text-red-650 rounded-xl shrink-0">
+          <div className="relative bg-[#0d1424] border border-white/[0.08] rounded-2xl p-6 shadow-2xl shadow-black/50 max-w-sm w-full z-50 animate-fade-in">
+            {/* Accent bar */}
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500/60 via-red-400/40 to-transparent rounded-t-2xl" />
+
+            <div className="flex gap-4 items-start mb-5">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl shrink-0">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-bold text-slate-800 text-sm">Pretende sair do Painel?</h4>
-                <p className="text-xs text-slate-500 leading-normal">
-                  Sua sessão atual de consultas será fechada e você precisará logar de novo para simular atendimentos juridicos.
+                <h4 className="font-bold text-slate-100 text-sm">Encerrar sessão?</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Sua sessão atual será encerrada. Você precisará autenticar novamente para acessar o painel jurídico.
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end pt-2">
+            <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 px-4 rounded-lg cursor-pointer"
+                className="bg-white/5 hover:bg-white/10 border border-white/[0.08] text-slate-300 text-xs font-bold py-2.5 px-5 rounded-xl cursor-pointer transition-all"
               >
-                Voltar
+                Cancelar
               </button>
               <button
                 onClick={confirmLogout}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm cursor-pointer"
+                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-red-500/20 cursor-pointer transition-all"
               >
-                Desconectar
+                Sair Agora
               </button>
             </div>
           </div>
