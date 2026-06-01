@@ -8,3 +8,4 @@ coverage/
 !.env.example
 .antigravity/
 .agents/
+lawyer-landing-68.aura.build/
