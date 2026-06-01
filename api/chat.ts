@@ -1,24 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+import { generateContentWithRetry } from "./geminiHelper.js";
 
-// Inicializador preguiçoso do cliente Gemini
-let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      throw new Error("A chave de API GEMINI_API_KEY não foi configurada nas variáveis de ambiente da Vercel.");
-    }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
-  }
-  return aiClient;
-}
 
 const SYSTEM_INSTRUCTIONS: Record<string, string> = {
   geral: `Você é o Dr. Advogado, um assistente de inteligência jurídica de altíssimo nível.
@@ -83,7 +64,6 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: "Faltou a lista 'messages' de conversa." });
     }
 
-    const client = getGeminiClient();
     const mappedSystemInstruction = SYSTEM_INSTRUCTIONS[persona] || SYSTEM_INSTRUCTIONS.geral;
 
     const contents = messages.map((msg: any) => ({
@@ -91,22 +71,21 @@ export default async function handler(req: any, res: any) {
       parts: [{ text: msg.content }]
     }));
 
-    const aiResponse = await client.models.generateContent({
-      model: "gemini-3.5-flash",
+    const replyText = await generateContentWithRetry({
+      primaryModel: "gemini-2.5-flash",
+      fallbackModel: "gemini-2.0-flash",
       contents,
-      config: {
-        systemInstruction: mappedSystemInstruction,
-        temperature: 0.7,
-      }
+      systemInstruction: mappedSystemInstruction,
+      temperature: 0.7
     });
 
-    const replyText = aiResponse.text || "Desculpe, não consegui formular uma resposta técnica para essa questão.";
     return res.status(200).json({ message: replyText });
 
   } catch (err: any) {
     console.error("Erro na API Serverless de Chat:", err);
     return res.status(500).json({
-      error: err.message || "Ocorreu um erro ao processar sua consulta jurídica via IA."
+      error: true,
+      message: "A IA está temporariamente sobrecarregada. Tente novamente em alguns instantes."
     });
   }
 }
