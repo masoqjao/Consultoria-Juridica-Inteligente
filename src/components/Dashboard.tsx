@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Shield, FileCheck, Zap, HelpCircle, ArrowRight, CheckCircle2, RefreshCw } from 'lucide-react';
 import { ChatMessage, Settings } from '../types';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 interface DashboardProps {
   settings: Settings;
@@ -237,16 +238,16 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
                     <div className="text-sm font-sans leading-relaxed prose select-text">
                       {msg.content.split('\n').map((line, lIdx) => {
                         // Very basic markdown formatting for bold lines
-                        const formattedLine = line.replace(/\*\*(.*?)\*\//g, '<strong>$1</strong>');
+                        const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                         
                         if (line.startsWith('* ') || line.startsWith('- ')) {
                           return (
                             <ul key={lIdx} className="list-disc ml-5 my-1 text-inherit">
-                              <li dangerouslySetInnerHTML={{ __html: formattedLine.substring(2) }} />
+                              <li dangerouslySetInnerHTML={{ __html: sanitizeHtml(formattedLine.substring(2)) }} />
                             </ul>
                           );
                         }
-                        return <p key={lIdx} dangerouslySetInnerHTML={{ __html: formattedLine }} className="my-1" />;
+                        return <p key={lIdx} dangerouslySetInnerHTML={{ __html: sanitizeHtml(formattedLine) }} className="my-1" />;
                       })}
                     </div>
                   </div>

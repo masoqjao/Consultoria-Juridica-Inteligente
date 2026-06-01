@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Gavel, FolderPlus, Search, Sparkles, AlertCircle, FileText, ChevronDown, ChevronUp, CheckCircle, Clock } from 'lucide-react';
 import { LegalCase, LegalArea, LiveCaseStatus } from '../types';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 interface ProcessesProps {
   cases: LegalCase[];
@@ -356,11 +357,11 @@ export default function Processes({ cases, setCases }: ProcessesProps) {
                               if (line.startsWith('* ') || line.startsWith('- ')) {
                                 return (
                                   <ul key={lIdx} className="list-disc ml-5 my-1">
-                                    <li dangerouslySetInnerHTML={{ __html: boldLine.substring(2) }} />
+                                    <li dangerouslySetInnerHTML={{ __html: sanitizeHtml(boldLine.substring(2)) }} />
                                   </ul>
                                 );
                               }
-                              return <p key={lIdx} dangerouslySetInnerHTML={{ __html: boldLine }} className="my-1.5" />;
+                              return <p key={lIdx} dangerouslySetInnerHTML={{ __html: sanitizeHtml(boldLine) }} className="my-1.5" />;
                             })}
                           </div>
                           <p className="text-[9px] text-slate-400 uppercase tracking-wide italic border-t border-emerald-100/60 pt-3 mt-4">

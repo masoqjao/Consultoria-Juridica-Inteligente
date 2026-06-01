@@ -20,6 +20,9 @@ import Dashboard from './components/Dashboard';
 import Processes from './components/Processes';
 import Consultations from './components/Consultations';
 import SettingsPage from './components/SettingsPage';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
+import LoginPage from './components/LoginPage';
 
 // Default initial state data for smooth, functional first-use experience
 const DEFAULT_SETTINGS: Settings = {
@@ -75,11 +78,11 @@ const DEFAULT_COON_SOCIATION: Consultation[] = [
   }
 ];
 
-export default function App() {
+function MainAppContent() {
+  const { user, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'processes' | 'consultations' | 'settings'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [mockIsLoggedIn, setMockIsLoggedIn] = useState(true);
 
   // Core Persisted State Hook declarations
   const [settings, setSettings] = useState<Settings>(() => {
@@ -131,40 +134,27 @@ export default function App() {
     setShowLogoutModal(true);
   };
 
-  const confirmLogout = () => {
-    setMockIsLoggedIn(false);
+  const confirmLogout = async () => {
+    await signOut();
     setShowLogoutModal(false);
   };
 
-  const handleLoginBack = () => {
-    setMockIsLoggedIn(true);
-    // Restart to dashboard
-    setActiveTab('dashboard');
-  };
-
-  if (!mockIsLoggedIn) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full text-center space-y-5 animate-fade-in">
-          <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mx-auto">
-            <Scale className="w-8 h-8" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold text-slate-800">Sessão Encerrada</h2>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Você desconectou da Consultoria Jurídica Inteligente. Suas alterações permanecem salvas localmente caso tenha habilitado o cache automático.
-            </p>
-          </div>
-          <button 
-            onClick={handleLoginBack}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-colors text-sm cursor-pointer"
-          >
-            Acessar Sistema Novamente
-          </button>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-wider font-mono">Verificando sessão...</p>
         </div>
       </div>
     );
   }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  const userInitials = user.email ? user.email.substring(0, 2).toUpperCase() : 'JD';
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col selection:bg-emerald-250 selection:text-emerald-900">
@@ -203,9 +193,9 @@ export default function App() {
             <div className="h-4 w-[1px] bg-slate-200"></div>
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
               <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 font-mono font-bold">
-                JD
+                {userInitials}
               </div>
-              <span className="hidden md:inline select-none text-slate-650 pr-1">joaoGTM0@gmail.com</span>
+              <span className="hidden md:inline select-none text-slate-650 pr-1">{user.email || ''}</span>
             </div>
           </div>
 
@@ -502,5 +492,13 @@ export default function App() {
       )}
 
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainAppContent />
+    </AuthProvider>
   );
 }
