@@ -55,8 +55,6 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
-  const activePersona = settings.lawyerSpec;
-
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isLoading]);
@@ -84,11 +82,8 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: updatedHistory.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
-          persona: activePersona
+          messages: updatedHistory.map(msg => ({ role: msg.role, content: msg.content })),
+          persona: settings.lawyerSpec
         })
       });
 
@@ -98,15 +93,12 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
       }
 
       const data = await response.json();
-
-      const newAssistantMessage: ChatMessage = {
+      setChatHistory(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: data.message,
         timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setChatHistory(prev => [...prev, newAssistantMessage]);
+      }]);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 4000);
 
@@ -119,106 +111,90 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
   };
 
   const handleClearChat = () => {
-    if (window.confirm("Deseja realmente limpar toda a sua conversa atual? Isso não afetará outros dados.")) {
+    if (window.confirm("Deseja realmente limpar toda a conversa?")) {
       setChatHistory([]);
       setErrorMessage(null);
     }
   };
 
-  const currentSuggestions = SUGGESTIONS[activePersona] || SUGGESTIONS.geral;
+  const currentSuggestions = SUGGESTIONS[settings.lawyerSpec] || SUGGESTIONS.geral;
 
   return (
     <div id="dashboard-tab" className="space-y-6 animate-fade-in">
 
-      {/* ─── Success Toast ─────────────────────────────────── */}
+      {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex items-center gap-3 bg-slate-900 border border-emerald-500/20 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-black/40 z-50 animate-fade-in">
-          <div className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl p-1.5">
-            <CheckCircle2 className="w-4.5 h-4.5" />
+        <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex items-center gap-3 bg-slate-800 border border-slate-700 text-white px-5 py-3 rounded-2xl shadow-2xl z-50 animate-fade-in">
+          <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-xl p-1.5">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
           <div>
-            <span className="font-bold text-sm text-slate-100 block leading-none">Análise pronta!</span>
-            <span className="text-[10px] text-emerald-400/70 font-mono uppercase tracking-widest">Resposta recebida</span>
+            <span className="font-bold text-sm text-white block">Análise pronta!</span>
+            <span className="text-[10px] text-emerald-400 font-mono uppercase tracking-widest">Resposta recebida</span>
           </div>
         </div>
       )}
 
-      {/* ─── Page header ──────────────────────────────────── */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">Consultor Jurídico IA</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Área ativa: <span className="text-emerald-400 font-semibold capitalize">
               {settings.lawyerSpec === 'geral' ? 'Direito Geral' : `Direito ${settings.lawyerSpec}`}
             </span>
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
           <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest font-mono">IA Ativa</span>
         </div>
       </div>
 
-      {/* ─── Main Chat Card ───────────────────────────────── */}
-      <section className="bg-[#0d1424] border border-white/[0.06] rounded-2xl overflow-hidden flex flex-col shadow-2xl shadow-black/30">
+      {/* Chat card */}
+      <section className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden flex flex-col shadow-xl shadow-black/30">
 
         {/* Chat header */}
-        <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.02]">
+        <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-xl bg-emerald-500/20 blur-md" />
-              <div className="relative p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                <Sparkles className="w-4.5 h-4.5 text-emerald-400" />
-              </div>
+            <div className="p-2 bg-emerald-500/15 border border-emerald-500/30 rounded-xl">
+              <Sparkles className="w-4.5 h-4.5 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-100">Pergunte ao Especialista</h3>
+              <h3 className="text-sm font-bold text-white">Pergunte ao Especialista</h3>
               <p className="text-[10px] text-slate-500">Powered by Gemini 2.5 Flash</p>
             </div>
           </div>
-
           {chatHistory.length > 0 && (
-            <button
-              onClick={handleClearChat}
-              className="text-[11px] text-slate-600 hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/5 transition-all font-medium flex items-center gap-1.5 border border-transparent hover:border-red-500/10"
-              title="Limpar histórico"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Limpar Chat
+            <button onClick={handleClearChat}
+              className="text-[11px] text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-all font-medium flex items-center gap-1.5 border border-transparent hover:border-red-500/20">
+              <RefreshCw className="w-3 h-3" /> Limpar Chat
             </button>
           )}
         </div>
 
-        {/* Message panel */}
-        <div className="h-[440px] overflow-y-auto p-5 space-y-5 flex flex-col bg-[#070c18]/40">
+        {/* Messages */}
+        <div className="h-[440px] overflow-y-auto p-5 space-y-5 flex flex-col bg-slate-900/50">
           {chatHistory.length === 0 ? (
-            /* Empty state */
             <div className="flex-grow flex flex-col items-center justify-center text-center py-6 px-4">
-              <div className="relative mb-5">
-                <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl" />
-                <div className="relative w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-emerald-400" />
-                </div>
+              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mb-5">
+                <Sparkles className="w-8 h-8 text-emerald-400" />
               </div>
-              <h3 className="text-slate-100 font-bold text-lg mb-2">Inicie uma Consulta Jurídica</h3>
-              <p className="text-slate-500 text-sm max-w-md mb-7 leading-relaxed">
+              <h3 className="text-white font-bold text-lg mb-2">Inicie uma Consulta Jurídica</h3>
+              <p className="text-slate-400 text-sm max-w-md mb-7 leading-relaxed">
                 Tire suas dúvidas legais e receba análises baseadas nos códigos civis, penais, trabalhistas e fiscais brasileiros.
               </p>
 
-              {/* Suggestions grid */}
-              <div className="w-full max-w-2xl bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl text-left">
-                <div className="flex items-center gap-2 text-slate-500 text-[10px] uppercase tracking-wider font-bold mb-3">
+              <div className="w-full max-w-2xl bg-slate-800 border border-slate-700 p-4 rounded-2xl text-left">
+                <div className="flex items-center gap-2 text-slate-400 text-[10px] uppercase tracking-wider font-bold mb-3">
                   <HelpCircle className="w-3.5 h-3.5 text-emerald-500" />
                   Dúvidas comuns em {settings.lawyerSpec === 'geral' ? 'Direito Geral' : `Direito ${settings.lawyerSpec}`}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {currentSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => handleSubmit(e, suggestion)}
-                      className="text-left text-xs bg-white/[0.03] hover:bg-emerald-500/10 hover:text-emerald-300 hover:border-emerald-500/20 border border-white/[0.05] text-slate-400 p-3 rounded-xl transition-all duration-200 flex items-start gap-2.5 group cursor-pointer"
-                    >
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-emerald-500 shrink-0 mt-0.5 transition-colors" />
+                    <button key={index} onClick={(e) => handleSubmit(e, suggestion)}
+                      className="text-left text-xs bg-slate-700/50 hover:bg-emerald-500/10 hover:text-emerald-300 hover:border-emerald-500/30 border border-slate-600 text-slate-300 p-3 rounded-xl transition-all duration-200 flex items-start gap-2.5 group cursor-pointer">
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 shrink-0 mt-0.5 transition-colors" />
                       <span className="font-medium line-clamp-2 leading-relaxed">{suggestion}</span>
                     </button>
                   ))}
@@ -226,34 +202,24 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
               </div>
             </div>
           ) : (
-            /* Conversation */
             <div className="space-y-5 flex-grow">
               {chatHistory.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {/* Assistant avatar */}
+                <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-1">
                       <Bot className="w-4 h-4 text-emerald-400" />
                     </div>
                   )}
-
-                  <div
-                    className={`max-w-[85%] sm:max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-emerald-600/90 text-white rounded-tr-none border border-emerald-500/30 shadow-lg shadow-emerald-500/10'
-                        : 'bg-slate-800/60 text-slate-200 rounded-tl-none border border-white/[0.06]'
-                    }`}
-                  >
-                    <div className={`text-[10px] font-bold uppercase tracking-widest mb-1.5 ${
-                      msg.role === 'user' ? 'text-emerald-200/70' : 'text-slate-500'
-                    } flex items-center justify-between gap-3`}>
+                  <div className={`max-w-[85%] sm:max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-emerald-600 text-white rounded-tr-none border border-emerald-500/30'
+                      : 'bg-slate-700 text-slate-100 rounded-tl-none border border-slate-600'
+                  }`}>
+                    <div className={`text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center justify-between gap-3 ${msg.role === 'user' ? 'text-emerald-200/80' : 'text-slate-400'}`}>
                       <span>{msg.role === 'user' ? 'Você' : settings.activeLawyerName}</span>
                       <span className="font-mono">{msg.timestamp}</span>
                     </div>
-                    <div className={`font-sans select-text ${msg.role === 'assistant' ? 'prose-dark' : ''}`}>
+                    <div className={msg.role === 'assistant' ? 'prose-dark' : ''}>
                       {msg.content.split('\n').map((line, lIdx) => {
                         const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                         if (line.startsWith('* ') || line.startsWith('- ')) {
@@ -270,37 +236,29 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
                 </div>
               ))}
 
-              {/* Error message */}
               {errorMessage && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 flex flex-col gap-2">
-                  <span className="font-bold text-red-400">❌ Falha na Consulta:</span>
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-300 space-y-2">
+                  <span className="font-bold text-red-400 block">❌ Falha na Consulta:</span>
                   <span>{errorMessage}</span>
-                  <button
-                    onClick={() => {
-                      if (chatHistory.length > 0) {
-                        const lastUserMsg = [...chatHistory].reverse().find(m => m.role === 'user');
-                        if (lastUserMsg) handleSubmit(undefined as any, lastUserMsg.content);
-                      }
-                    }}
-                    className="mt-1 text-left text-red-400/80 hover:text-red-300 underline font-semibold flex items-center gap-1 transition-colors"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Tentar reenviar última pergunta
+                  <button onClick={() => {
+                    const lastUserMsg = [...chatHistory].reverse().find(m => m.role === 'user');
+                    if (lastUserMsg) handleSubmit(undefined as any, lastUserMsg.content);
+                  }} className="flex items-center gap-1 text-red-400 hover:text-red-300 underline font-semibold mt-1">
+                    <RefreshCw className="w-3 h-3" /> Tentar novamente
                   </button>
                 </div>
               )}
 
-              {/* Typing indicator */}
               {isLoading && (
                 <div className="flex justify-start items-center gap-3" id="typing-indicator">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                     <Bot className="w-4 h-4 text-emerald-400" />
                   </div>
-                  <div className="bg-slate-800/60 border border-white/[0.06] px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-2">
+                  <div className="bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-2">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full dot-1" />
                     <span className="w-2 h-2 bg-emerald-500 rounded-full dot-2" />
                     <span className="w-2 h-2 bg-emerald-500 rounded-full dot-3" />
-                    <span className="ml-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">IA Analisando...</span>
+                    <span className="ml-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">IA Analisando...</span>
                   </div>
                 </div>
               )}
@@ -310,64 +268,47 @@ export default function Dashboard({ settings, chatHistory, setChatHistory }: Das
         </div>
 
         {/* Input bar */}
-        <div className="p-4 border-t border-white/[0.05] bg-[#0a1020]/60">
+        <div className="p-4 border-t border-slate-700 bg-slate-800">
           <form className="flex gap-3" onSubmit={(e) => handleSubmit(e)}>
             <input
               id="user-input"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               disabled={isLoading}
-              className="input-dark flex-grow bg-[#070c18] border border-white/[0.08] hover:border-white/[0.12] focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 transition-all duration-200"
+              className="input-dark flex-grow rounded-xl px-4 py-3 text-sm"
               placeholder="Digite sua dúvida ou problema jurídico..."
               type="text"
               autoComplete="off"
             />
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isLoading}
-              className={`px-4 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center active:scale-95 ${
+            <button type="submit" disabled={!inputText.trim() || isLoading}
+              className={`px-4 rounded-xl transition-all flex items-center justify-center active:scale-95 ${
                 !inputText.trim() || isLoading
-                  ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20 hover:shadow-emerald-500/30'
-              }`}
-            >
+                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+              }`}>
               <Send className="w-4.5 h-4.5" />
             </button>
           </form>
-          <p className="text-[10px] text-slate-700 text-center mt-2.5 uppercase tracking-wider font-medium">
+          <p className="text-[10px] text-slate-600 text-center mt-2.5 uppercase tracking-wider font-medium">
             Respostas da IA são informativas e não substituem assessoria jurídica formal.
           </p>
         </div>
       </section>
 
-      {/* ─── Info cards ───────────────────────────────────── */}
+      {/* Info cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          {
-            Icon: Shield,
-            title: 'Privacidade Total',
-            text: 'Seus relatos de casos são protegidos com criptografia de ponta e não são compartilhados.',
-          },
-          {
-            Icon: FileCheck,
-            title: 'Jurisprudência em Tempo Real',
-            text: 'Integração profunda com CLT, Súmulas TST e leis federais brasileiras consolidadas.',
-          },
-          {
-            Icon: Zap,
-            title: 'Agilidade Analítica',
-            text: 'Respostas estruturadas e fundamentadas em segundos para otimizar seu tempo legal.',
-          },
+          { Icon: Shield,    title: 'Privacidade Total',            text: 'Seus relatos de casos são protegidos com criptografia e não são compartilhados.' },
+          { Icon: FileCheck, title: 'Jurisprudência em Tempo Real', text: 'Integração com CLT, Súmulas TST e leis federais brasileiras consolidadas.'      },
+          { Icon: Zap,       title: 'Agilidade Analítica',          text: 'Respostas estruturadas e fundamentadas em segundos para otimizar seu tempo.'      },
         ].map(({ Icon, title, text }) => (
-          <div
-            key={title}
-            className="group bg-[#0d1424] border border-white/[0.05] p-5 rounded-2xl flex flex-col items-start hover:border-emerald-500/20 hover:bg-emerald-500/[0.03] transition-all duration-300"
-          >
-            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/15 rounded-xl text-emerald-400 mb-4 group-hover:scale-110 transition-transform duration-200">
+          <div key={title}
+            className="group bg-slate-800 border border-slate-700 p-5 rounded-2xl flex flex-col items-start hover:border-emerald-500/40 hover:bg-slate-800/80 transition-all duration-200">
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 mb-4 group-hover:scale-110 transition-transform duration-200">
               <Icon className="w-4.5 h-4.5" />
             </div>
-            <h4 className="font-bold text-slate-100 mb-1.5 text-sm">{title}</h4>
-            <p className="text-slate-500 text-xs leading-relaxed">{text}</p>
+            <h4 className="font-bold text-white mb-1.5 text-sm">{title}</h4>
+            <p className="text-slate-400 text-xs leading-relaxed">{text}</p>
           </div>
         ))}
       </div>

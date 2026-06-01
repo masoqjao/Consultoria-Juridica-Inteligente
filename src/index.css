@@ -6,29 +6,19 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* ===== Dark Premium Scrollbar ===== */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.5);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
-}
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-/* ===== Base Overrides ===== */
+/* ===== Base ===== */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== Custom Animations ===== */
+/* ===== Animations ===== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -41,81 +31,20 @@
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(16,185,129,0.3); }
-  50%       { box-shadow: 0 0 20px rgba(16,185,129,0.6), 0 0 40px rgba(16,185,129,0.2); }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
 @keyframes dotBounce {
   0%, 80%, 100% { transform: translateY(0); }
   40%           { transform: translateY(-6px); }
 }
 
-.animate-fade-in   { animation: fadeIn   0.35s ease both; }
-.animate-slide-right { animation: slideRight 0.3s ease both; }
-.animate-slide-down  { animation: slideDown  0.25s ease both; }
-.animate-glow-pulse  { animation: glowPulse  2s ease-in-out infinite; }
+.animate-fade-in    { animation: fadeIn    0.35s ease both; }
+.animate-slide-right{ animation: slideRight 0.3s  ease both; }
+.animate-slide-down { animation: slideDown  0.25s ease both; }
 
-/* Dot bounce for typing indicator */
 .dot-1 { animation: dotBounce 1.2s ease infinite; animation-delay: 0ms;   }
 .dot-2 { animation: dotBounce 1.2s ease infinite; animation-delay: 180ms; }
 .dot-3 { animation: dotBounce 1.2s ease infinite; animation-delay: 360ms; }
 
-/* ===== Gradient text utility ===== */
-.text-gradient-emerald {
-  background: linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ===== Glassmorphism card ===== */
-.glass-card {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* ===== Input dark override ===== */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.5);
-}
-
-/* ===== Markdown prose for dark ===== */
-.prose-dark p {
-  margin-bottom: 0.75rem;
-  color: #cbd5e1;
-}
-.prose-dark p:last-child {
-  margin-bottom: 0;
-}
-.prose-dark ul, .prose-dark ol {
-  margin-left: 1.25rem;
-  margin-bottom: 0.75rem;
-  list-style-type: disc;
-  color: #cbd5e1;
-}
-.prose-dark li {
-  margin-bottom: 0.25rem;
-}
-.prose-dark strong {
-  font-weight: 700;
-  color: #f1f5f9;
-}
-
-/* Legacy prose for white context */
-.prose p { margin-bottom: 0.75rem; }
-.prose p:last-child { margin-bottom: 0; }
-.prose ul, .prose ol { margin-left: 1.25rem; margin-bottom: 0.75rem; list-style-type: disc; }
-.prose li { margin-bottom: 0.25rem; }
-.prose strong { font-weight: 600; color: inherit; }
-
-/* ===== Sidebar active indicator ===== */
+/* ===== Sidebar nav active indicator ===== */
 .nav-active {
   position: relative;
 }
@@ -131,8 +60,39 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   border-radius: 0 4px 4px 0;
 }
 
-/* ===== Emerald glow ring on focused inputs ===== */
+/* ===== Input focus glow ===== */
+.input-dark {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f1f5f9;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-dark::placeholder { color: #475569; }
 .input-dark:focus {
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15), 0 1px 3px rgba(0,0,0,0.4);
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
   outline: none;
 }
+.input-dark:hover:not(:focus) {
+  border-color: #475569;
+}
+
+/* Calendar/time picker dark */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+}
+
+/* ===== Markdown prose dark ===== */
+.prose-dark p { margin-bottom: 0.75rem; color: #cbd5e1; line-height: 1.65; }
+.prose-dark p:last-child { margin-bottom: 0; }
+.prose-dark ul, .prose-dark ol { margin-left: 1.25rem; margin-bottom: 0.75rem; list-style-type: disc; color: #cbd5e1; }
+.prose-dark li { margin-bottom: 0.25rem; }
+.prose-dark strong { font-weight: 700; color: #f1f5f9; }
+
+/* Legacy prose (white context) */
+.prose p { margin-bottom: 0.75rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose ul, .prose ol { margin-left: 1.25rem; margin-bottom: 0.75rem; list-style-type: disc; }
+.prose li { margin-bottom: 0.25rem; }
+.prose strong { font-weight: 600; color: inherit; }
